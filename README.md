@@ -91,7 +91,7 @@ iex> DeepDive.FullWalk.find_key(atom_map, :e)
 ]
 ```
 
-Peek into the [tests](https://github.com/blallo/deep_dive/tree/zero/test) to see more examples in action.
+Peek into the [tests](https://github.com/blallo/deep_dive/tree/main/test) to see more examples in action.
 
 ## Installation
 
