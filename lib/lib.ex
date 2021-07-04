@@ -39,6 +39,7 @@ defmodule DeepDive do
 
   defmacro __using__(_) do
     quote do
+      @spec find_key(data :: term, key :: term) :: unquote(__MODULE__).result()
       def find_key(%_{} = data, key), do: data |> Map.from_struct() |> find_key(key)
 
       def find_key(data, key) do

@@ -1,7 +1,9 @@
 defmodule DeepDive.FullWalk do
+  @moduledoc nil
+
   use DeepDive
 
-  @spec find_leaf(term, term, [term]) :: DeepDive.result()
+  @spec find_leaf(term, term, [term]) :: {:abort, term} | {:found, [term]}
   defp find_leaf(data, _key, acc) when not (is_map(data) or is_list(data)),
     do: {:abort, acc}
 
