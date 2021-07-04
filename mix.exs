@@ -10,8 +10,14 @@ defmodule DeepDive.MixProject do
       deps: deps(),
       name: "Deep Dive",
       source_url: "https://github.com/blallo/deep_dive",
-      docs: docs()
+      docs: docs(),
+      description: description(),
+      package: package()
     ]
+  end
+
+  def application do
+    []
   end
 
   defp deps do
@@ -24,5 +30,17 @@ defmodule DeepDive.MixProject do
 
   defp docs do
     [main: "DeepDive", extras: ["README.md"]]
+  end
+
+
+  defp description() do
+    "Debug utility to explore nested data structures in elixir"
+  end
+
+  defp package() do
+    [
+      licenses: ["GPL"],
+      links: %{"GitHub" => "https://github.com/blallo/deep_dive"}
+    ]
   end
 end
