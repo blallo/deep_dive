@@ -47,8 +47,11 @@ defmodule DeepDive do
           {:abort, _} ->
             []
 
-          {:found, acc} ->
+          {:found, acc} when is_list(acc) ->
             acc |> List.flatten() |> Enum.map(fn {:leaf, v} -> v end)
+
+          {:found, {:leaf, v}} ->
+            [v]
         end
       end
     end

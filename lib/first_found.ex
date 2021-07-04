@@ -3,7 +3,8 @@ defmodule DeepDive.FirstFound do
 
   use DeepDive
 
-  @spec find_leaf(term, term, [term]) :: {:abort, term} | {:found, [term]}
+  @spec find_leaf(term, term, [term]) ::
+          {:abort, term} | {:found, [{:leaf, DeepDive.result()}] | {:leaf, DeepDive.result()}}
   defp find_leaf(data, _key, acc) when not (is_map(data) or is_list(data)),
     do: {:abort, acc}
 
