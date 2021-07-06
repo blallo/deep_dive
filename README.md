@@ -21,7 +21,7 @@ one is ancestor of the other. In the former case, they are also at the same leve
 ### Elixir data structures and trees
 
 For what concerns this small utility, the elixir data structure correspondents of the
-elements of an abstract trees are maps (and structs treated as such) and lists (with
+elements of an abstract tree are maps (and structs treated as such) and lists (with
 keyword lists as a special case, that is treated as maps). Any nested combination of such
 structures may be explored with this library.
 
