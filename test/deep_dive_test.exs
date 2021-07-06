@@ -47,7 +47,13 @@ defmodule DeepDiveTest do
       one => [%{one => two, two => three}]
     }
 
-    %{atom_map: atom_map, mixed_map: mixed_map, one: one, two: two, three: three}
+    kwlist = [
+      a: 1,
+      b: 2,
+      c: %{a: 3, d: [a: 4, b: 5]}
+    ]
+
+    %{atom_map: atom_map, mixed_map: mixed_map, one: one, two: two, three: three, kwlist: kwlist}
   end
 
   describe "atom keys:" do
@@ -155,6 +161,22 @@ defmodule DeepDiveTest do
                     ]
                   }
                 }}
+             ]
+    end
+  end
+
+  describe "kwlist:" do
+    test "first found", %{kwlist: data} do
+      assert DeepDive.FirstFound.find_key(data, :a) == [
+               {[], 1}
+             ]
+    end
+
+    test "full walk", %{kwlist: data} do
+      assert DeepDive.FullWalk.find_key(data, :a) == [
+               {[:c, :d], 4},
+               {[:c], 3},
+               {[], 1}
              ]
     end
   end

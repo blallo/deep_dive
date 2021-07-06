@@ -49,26 +49,30 @@ defmodule DeepDive.FullWalk do
   end
 
   defp find_leaf(data, key, acc) when is_list(data) do
-    data
-    |> Enum.with_index()
-    |> Enum.reduce([], fn {v, i}, acc_ ->
-      case find_leaf(v, key, [i | acc]) do
-        {:found, acc__} ->
-          [acc__ | acc_]
+    if Keyword.keyword?(data) do
+      data |> Enum.into(%{}) |> find_leaf(key, acc)
+    else
+      data
+      |> Enum.with_index()
+      |> Enum.reduce([], fn {v, i}, acc_ ->
+        case find_leaf(v, key, [i | acc]) do
+          {:found, acc__} ->
+            [acc__ | acc_]
 
-        _ ->
-          acc_
+          _ ->
+            acc_
+        end
+      end)
+      |> case do
+        [] ->
+          {:abort, acc}
+
+        [new_acc] ->
+          {:found, new_acc}
+
+        new_acc ->
+          {:found, new_acc}
       end
-    end)
-    |> case do
-      [] ->
-        {:abort, acc}
-
-      [new_acc] ->
-        {:found, new_acc}
-
-      new_acc ->
-        {:found, new_acc}
     end
   end
 end
