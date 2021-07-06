@@ -18,6 +18,20 @@ _level_ if they have the same number of parent nodes up to the root. A set of no
 in the same _branch_ if they either have the same set of parent nodes up to the root or
 one is ancestor of the other. In the former case, they are also at the same level.
 
+### Elixir data structures and trees
+
+For what concerns this small utility, the elixir data structure correspondents of the
+elements of an abstract trees are maps (and structs treated as such) and lists (with
+keyword lists as a special case, that is treated as maps). Any nested combination of such
+structures may be explored with this library.
+
+Any key-value relationship represents descending a level, and any keys in the same
+structure are on the same branch (so the branching begins _after_ the key-value jump).
+This is important to notice because, in the case of the `DeepDive.FirstFound` algorithm
+that is described below, if a key is found on a level (i.e. in a map or a keyword list),
+the search is halted for all the children branches attached to other keys (and this might
+sound a bit unexpected).
+
 ## What's inside
 
 It currently offers two different modules that implement a different exploration
@@ -101,7 +115,7 @@ by adding `deep_dive` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:deep_dive, "~> 0.1.0", only: :dev}
+    {:deep_dive, "~> 0.2.0", only: :dev}
   ]
 end
 ```
