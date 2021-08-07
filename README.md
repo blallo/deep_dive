@@ -119,7 +119,7 @@ by adding `deep_dive` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:deep_dive, "~> 0.2.0", only: :dev}
+    {:deep_dive, "~> 1.0.0", only: :dev}
   ]
 end
 ```
