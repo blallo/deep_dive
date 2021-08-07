@@ -3,76 +3,42 @@ defmodule DeepDive.FullWalk do
 
   use DeepDive
 
-  @spec find_leaf(term, term, [term]) ::
-          {:abort, term} | {:found, [{:leaf, DeepDive.result()}] | {:leaf, DeepDive.result()}}
-  defp find_leaf(data, _key, acc) when not (is_map(data) or is_list(data)),
-    do: {:abort, acc}
+  alias DeepDive.Comparer
 
-  defp find_leaf(%_{} = data, key, acc), do: data |> Map.from_struct() |> find_leaf(key, acc)
+  @spec find_leaf(term, Comparer.matcher(), list_of_keys_above :: [term], DeepDive.result()) ::
+          DeepDive.result()
+  defp find_leaf(data, key, cur_route, global_acc) when is_struct(data),
+    do: data |> Map.from_struct() |> find_leaf(key, cur_route, global_acc)
 
-  defp find_leaf(data, key, acc) when is_map(data) do
-    data
-    |> Enum.reduce([], fn
-      {^key, v}, acc_ when not is_map(v) and not is_list(v) ->
-        [{:leaf, {Enum.reverse(acc), v}} | acc_]
+  defp find_leaf(data, key, cur_route, global_acc) when is_map(data) do
+    lvl_matches =
+      data
+      |> Comparer.get_all_keys(key)
+      |> Enum.reduce([], fn {k, v}, acc -> [{Enum.reverse([k | cur_route]), v} | acc] end)
 
-      {^key, v}, acc_ ->
-        acc_ = [{:leaf, {Enum.reverse(acc), v}} | acc_]
+    updated_acc =
+      Enum.reduce(data, global_acc, fn
+        {k, v}, acc when is_map(v) or is_list(v) ->
+          [find_leaf(v, key, [k | cur_route], global_acc) | acc]
 
-        case find_leaf(v, key, [key | acc]) do
-          {:found, acc__} ->
-            [acc__ | acc_]
+        {k, v}, acc when is_struct(v) ->
+          [find_leaf(Map.from_struct(v), key, [k | cur_route], global_acc) | acc]
 
-          _ ->
-            acc_
-        end
+        _, acc ->
+          acc
+      end)
 
-      {k, v}, acc_ ->
-        case find_leaf(v, key, [k | acc]) do
-          {:found, acc__} ->
-            [acc__ | acc_]
-
-          _ ->
-            acc_
-        end
-    end)
-    |> case do
-      [] ->
-        {:abort, acc}
-
-      [new_acc] ->
-        {:found, new_acc}
-
-      new_acc ->
-        {:found, new_acc}
-    end
+    Enum.concat([lvl_matches, updated_acc])
   end
 
-  defp find_leaf(data, key, acc) when is_list(data) do
+  defp find_leaf(data, key, cur_route, global_acc) when is_list(data) do
     if Keyword.keyword?(data) do
-      data |> Enum.into(%{}) |> find_leaf(key, acc)
+      data |> Enum.into(%{}) |> find_leaf(key, cur_route, global_acc)
     else
       data
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {v, i}, acc_ ->
-        case find_leaf(v, key, [i | acc]) do
-          {:found, acc__} ->
-            [acc__ | acc_]
-
-          _ ->
-            acc_
-        end
-      end)
-      |> case do
-        [] ->
-          {:abort, acc}
-
-        [new_acc] ->
-          {:found, new_acc}
-
-        new_acc ->
-          {:found, new_acc}
-      end
+      |> Enum.with_index(fn el, idx -> {idx, el} end)
+      |> Enum.into(%{})
+      |> find_leaf(key, cur_route, global_acc)
     end
   end
 end

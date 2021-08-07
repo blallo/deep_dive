@@ -3,72 +3,50 @@ defmodule DeepDive.Comparer do
   This module holds the logic to match the keys in a data structure.
   """
   @type fuzzy_matcher :: Regex.t() | (term -> bool)
-  @type matcher :: term | fuzzy_matcher
+  @type matcher :: char | String.t() | atom | list | map | struct | pid | fuzzy_matcher
 
   @doc """
-  This function tells if a map contains a key that match the `matcher`.
-
-  Note that, if the `matcher` is not a `fuzzy_matcher` it behaves as `Map.has_key?/2`.
+  This function retrieves the first match of `matcher` and the corresponting matching key.
+  In case of no match, it returns `nil`.
   """
-  @spec has_key?(map, matcher) :: bool
-  def has_key?(data, %Regex{} = r) do
-    Enum.reduce_while(data, false, fn
-      {%name{}, _}, _ -> name |> to_string |> match_regex(r)
-      {k, _}, _ -> k |> to_string |> match_regex(r)
-    end)
-  end
-
-  def has_key?(data, f) when is_function(f, 1) do
-    Enum.reduce_while(data, false, fn {k, _}, _ ->
-      if f.(k) do
-        {:halt, true}
-      else
-        {:cont, false}
-      end
-    end)
-  end
-
-  def has_key?(data, key), do: Map.has_key?(data, key)
-
-  @spec match_regex(String.t(), Regex.t()) :: {:halt, true} | {:cont, false}
-  defp match_regex(k, %Regex{} = r) do
-    if k =~ r do
-      {:halt, true}
-    else
-      {:cont, false}
-    end
-  end
-
-  @doc """
-  This function retrieves the first match of `matcher`.
-
-  Note that, if the `matcher` is not a `fuzzy_matcher` it behaves as `Map.get/2`.
-  """
-  @spec get_key(map, matcher) :: term
+  @spec get_key(map, matcher) :: {term, term} | nil
   def get_key(data, %Regex{} = r) do
-    Enum.reduce_while(data, nil, fn
-      {%name{}, v}, _ -> name |> to_string |> return_on_regex_match(r, v)
-      {k, v}, _ -> k |> to_string |> return_on_regex_match(r, v)
-    end)
+    Enum.reduce_while(data, nil, fn {k, v}, _ -> return_on_regex_match(k, r, v) end)
   end
 
   def get_key(data, f) when is_function(f, 1) do
     Enum.reduce_while(data, nil, fn {k, v}, _ ->
       if f.(k) do
-        {:halt, v}
+        {:halt, {k, v}}
       else
         {:cont, nil}
       end
     end)
   end
 
-  def get_key(data, key), do: Map.get(data, key)
+  def get_key(data, key) do
+    case Map.get(data, key) do
+      nil ->
+        nil
 
-  @spec return_on_regex_match(String.t(), Regex.t(), value) :: {:halt, value} | {:cont, nil}
-        when value: term
+      v ->
+        {key, v}
+    end
+  end
+
+  @spec return_on_regex_match(key, Regex.t(), value) :: {:halt, {key, value}} | {:cont, nil}
+        when value: term, key: term
+  defp return_on_regex_match(%name{} = k, %Regex{} = r, v) do
+    if to_string(name) =~ r do
+      {:halt, {k, v}}
+    else
+      {:cont, nil}
+    end
+  end
+
   defp return_on_regex_match(k, %Regex{} = r, v) do
-    if k =~ r do
-      {:halt, v}
+    if to_string(k) =~ r do
+      {:halt, {k, v}}
     else
       {:cont, nil}
     end
@@ -80,6 +58,9 @@ defmodule DeepDive.Comparer do
 
   Note that, if the `matcher` is not a `fuzzy_matcher` it returns the result of `Map.get(2)`,
   wrapped in a list.
+
+  Note also that this function operates only at the first level and does not steps into the
+  key values.
   """
   @spec get_all_keys(map, matcher) :: [term]
   def get_all_keys(data, %Regex{} = r) do

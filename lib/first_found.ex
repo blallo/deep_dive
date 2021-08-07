@@ -3,65 +3,35 @@ defmodule DeepDive.FirstFound do
 
   use DeepDive
 
-  @spec find_leaf(term, term, [term]) ::
-          {:abort, term} | {:found, [{:leaf, DeepDive.result()}] | {:leaf, DeepDive.result()}}
-  defp find_leaf(data, _key, acc) when not (is_map(data) or is_list(data)),
-    do: {:abort, acc}
+  alias DeepDive.Comparer
 
-  defp find_leaf(%_{} = data, key, acc), do: data |> Map.from_struct() |> find_leaf(key, acc)
+  @spec find_leaf(term, Comparer.matcher(), list_of_keys_above :: [term], DeepDive.result()) ::
+          DeepDive.result()
+  defp find_leaf(data, key, cur_route, global_acc) when is_struct(data),
+    do: data |> Map.from_struct() |> find_leaf(key, cur_route, global_acc)
 
-  defp find_leaf(data, key, acc) when is_map(data) do
-    if Map.has_key?(data, key) do
-      {:found, {:leaf, {Enum.reverse(acc), Map.get(data, key)}}}
-    else
-      data
-      |> Enum.reduce([], fn {k, v}, acc_ ->
-        case find_leaf(v, key, [k | acc]) do
-          {:found, acc__} ->
-            [acc__ | acc_]
+  defp find_leaf(data, key, cur_route, global_acc) when is_map(data) do
+    case Comparer.get_key(data, key) do
+      nil ->
+        data
+        |> Enum.reverse()
+        |> Enum.reduce(global_acc, fn {k, v}, acc -> find_leaf(v, key, [k | cur_route], acc) end)
 
-          _ ->
-            acc_
-        end
-      end)
-      |> case do
-        [] ->
-          {:abort, acc}
-
-        [new_acc] ->
-          {:found, new_acc}
-
-        new_acc ->
-          {:found, new_acc}
-      end
+      {k, v} ->
+        [{Enum.reverse([k | cur_route]), v} | global_acc]
     end
   end
 
-  defp find_leaf(data, key, acc) when is_list(data) do
+  defp find_leaf(data, key, cur_route, global_acc) when is_list(data) do
     if Keyword.keyword?(data) do
-      data |> Enum.into(%{}) |> find_leaf(key, acc)
+      data |> Enum.into(%{}) |> find_leaf(key, cur_route, global_acc)
     else
       data
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {v, i}, acc_ ->
-        case find_leaf(v, key, [i | acc]) do
-          {:found, acc__} ->
-            [acc__ | acc_]
-
-          _ ->
-            acc_
-        end
-      end)
-      |> case do
-        [] ->
-          {:abort, acc}
-
-        [new_acc] ->
-          {:found, new_acc}
-
-        new_acc ->
-          {:found, new_acc}
-      end
+      |> Enum.with_index(fn el, idx -> {idx, el} end)
+      |> Enum.into(%{})
+      |> find_leaf(key, cur_route, global_acc)
     end
   end
+
+  defp find_leaf(_, _, _, global_acc), do: global_acc
 end
