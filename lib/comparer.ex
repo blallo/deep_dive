@@ -2,7 +2,16 @@ defmodule DeepDive.Comparer do
   @moduledoc """
   This module holds the logic to match the keys in a data structure.
   """
+  @typedoc """
+  A `fuzzy_matcher` is one that may return upon match more than one result.
+  """
   @type fuzzy_matcher :: Regex.t() | (term -> bool)
+  @typedoc """
+  A `matcher` is any type that may be compared to a key. There are two special cases:
+   - A `Regex`, is compared with `=~`.
+   - A function of kind `term -> bool`, is applied to the key to verify the match.
+   - Anything else is matched via `==`.
+  """
   @type matcher :: char | String.t() | atom | list | map | struct | pid | fuzzy_matcher
 
   @doc """
@@ -56,13 +65,10 @@ defmodule DeepDive.Comparer do
   This function retrieves all the matches of `matcher`. The return value is a list of the
   key-value tuples.
 
-  Note that, if the `matcher` is not a `fuzzy_matcher` it returns the result of `Map.get(2)`,
-  wrapped in a list.
-
   Note also that this function operates only at the first level and does not steps into the
   key values.
   """
-  @spec get_all_keys(map, matcher) :: [term]
+  @spec get_all_keys(map, matcher) :: DeepDive.result()
   def get_all_keys(data, %Regex{} = r) do
     Enum.reduce(data, [], fn
       {%name{} = k, v}, acc -> name |> to_string |> acc_on_regex_match(r, {k, v}, acc)

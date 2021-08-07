@@ -30,16 +30,36 @@ defmodule DeepDive do
 
   Both these strategies complete when they have explored the whole tree.
 
+  The public API is the function `find_keys/2`, that is present in both the aforementioned
+  modules.
+
 
   [1]: https://hexdocs.pm/absinthe/overview.html
   [2]: https://hexdocs.pm/absinthe/Absinthe.Resolution.html
   """
 
+  @typedoc """
+  The result is what `find_key` gives as output. `path_of_keys` is the (ordered) list of
+  keys one should use to reach the sought key. `value_of_key` is the value associated to
+  such key.
+  """
   @type result :: [{path_of_keys :: [term], value_of_key :: term}]
 
   defmacro __using__(_) do
     quote do
-      @spec find_key(term, Comparer.matcher()) :: unquote(__MODULE__).result()
+      @doc """
+      This is the main API of the library. It expects the data to be a map-like (or list-like)
+      structure to be explored. The second argument may be a `DeepDive.Comparer.matcher`.
+
+      This means that it may be:
+        - a `Regex`: in such case the key will be matched as such; be aware that the `struct`s
+          are a special case, in which the name of the struct alone is matched; also, every
+          key that is not possible to transform in a `String` (i.e. everything that does not
+          implement the `Strings.Chars` protocol) will make `raise` the function.
+        - a function of the kind `term -> bool`: to allow a custom search logic.
+        - anything else (except functions): in this case the match is done by means of `==`.
+      """
+      @spec find_key(term, DeepDive.Comparer.matcher()) :: unquote(__MODULE__).result()
       def find_key(data, key) do
         data
         |> find_leaf(key, [], [])

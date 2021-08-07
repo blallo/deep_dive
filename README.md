@@ -78,13 +78,13 @@ Find, on any branch, the first occurence of the key `:e`
 ```elixir
 iex> DeepDive.FirstFound.find_key(atom_map, :e)
 [
-  {[:a, :h, :i], 8},
-  {[:a, :f, :g], 6},
-  {[:a, :b, :d, 4], 5},
-  {[:a, :b, :d, 3], 4},
-  {[:a, :b, :d, 2, :n, :o, :p], 3},
-  {[:a, :b, :d, 1], 2},
-  {[:a, :b, :d, 0], 1}
+  {[:a, :h, :i, :e], 8},
+  {[:a, :f, :g, :e], 6},
+  {[:a, :b, :d, 4, :e], 5},
+  {[:a, :b, :d, 3, :e], 4},
+  {[:a, :b, :d, 2, :n, :o, :p, :e], 3},
+  {[:a, :b, :d, 1, :e], 2},
+  {[:a, :b, :d, 0, :e], 1}
 ]
 ```
 
@@ -93,19 +93,23 @@ Find all the occurences, instead
 ```elixir
 iex> DeepDive.FullWalk.find_key(atom_map, :e)
 [
-  {[:a, :h, :i, :j, :l, :m], 8},
-  {[:a, :h, :i, :j, :k], 7},
-  {[:a, :h, :i], 8},
-  {[:a, :f, :g], 6},
-  {[:a, :b, :d, 4], 5},
-  {[:a, :b, :d, 3], 4},
-  {[:a, :b, :d, 2, :n, :o, :p], 3},
-  {[:a, :b, :d, 1], 2},
-  {[:a, :b, :d, 0], 1}
+  {[:a, :h, :i, :e], 8},
+  {[:a, :h, :i, :j, :l, :m, :e], 8},
+  {[:a, :h, :i, :j, :k, :e], 7},
+  {[:a, :f, :g, :e], 6},
+  {[:a, :b, :d, 4, :e], 5},
+  {[:a, :b, :d, 3, :e], 4},
+  {[:a, :b, :d, 2, :n, :o, :p, :e], 3},
+  {[:a, :b, :d, 1, :e], 2},
+  {[:a, :b, :d, 0, :e], 1}
 ]
 ```
 
-Peek into the [tests](https://github.com/blallo/deep_dive/tree/main/test) to see more examples in action.
+The key might also be a `Regex` or a function (`(term -> bool)`). This in order to allow
+a fuzzy matching, in case the exact key is not known.
+
+Peek into the [tests](https://github.com/blallo/deep_dive/tree/main/test) to see more
+examples in action.
 
 ## Installation
 
